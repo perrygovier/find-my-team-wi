@@ -1,68 +1,94 @@
 import {
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
   IonContent,
   IonHeader,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonListHeader,
   IonPage,
   IonTitle,
-  IonToolbar
+  IonToolbar,
+  useIonViewDidEnter,
+  useIonViewWillLeave,
 } from '@ionic/react';
 import { book, build, colorFill, grid } from 'ionicons/icons';
 import React from 'react';
+
+
+import { 
+  geoJSON,
+  Map,
+  popup,
+  tileLayer, 
+  // Layer, 
+  // marker
+} from 'leaflet';
+
 import './Tab1.css';
 
 const Tab1: React.FC = () => {
+  let map: Map;
+
+  const leafletMap = () => {
+    // In setView add latLng and zoom
+    map = new Map('mapId').setView([43.07467, -89.38414], 12);
+    tileLayer('https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}{r}.png', {
+      attribution: 'Digital Dems | OpenStreeMap ',
+    }).addTo(map);
+
+    const groups = [{
+      "type": "Feature",
+      "properties": {"name": "South Madison Voters"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-89.344791, 43.050259],
+          [-89.386494, 43.061762],
+          [-89.404748, 43.057094],
+          [-89.436691, 43.034530],
+          [-89.435357, 43.024428],
+          [-89.351707, 43.025506]
+        ]]
+      }
+    }];
+    // @ts-ignore
+    geoJSON(groups, {
+      style: function(feature:any) {
+        switch (feature.properties.name) {
+          case 'South Madison Voters': return {color: "#0000ff"};
+          default: return {color: "#"+((1<<24)*Math.random()|0).toString(16)};
+        }
+      }
+    }).addTo(map);
+
+    // add click listeners
+    map.on('click', onMapClick);
+  }
+
+  const onMapClick = (e:any) => {
+    popup()
+      .setLatLng(e.latlng)
+      .setContent("You clicked the map at " + e.latlng.toString())
+      .openOn(map);
+  }
+
+
+  useIonViewDidEnter(() => {
+    leafletMap();
+  });
+
+  useIonViewWillLeave(() => {
+
+    map.off('click', onMapClick);
+    map.remove();
+  });
+
+
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Tab One</IonTitle>
+          <IonTitle>Browse Map</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent>
-        <IonCard className="welcome-card">
-          <img src="/assets/shapes.svg" alt="" />
-          <IonCardHeader>
-            <IonCardSubtitle>Get Started</IonCardSubtitle>
-            <IonCardTitle>Welcome to Ionic</IonCardTitle>
-          </IonCardHeader>
-          <IonCardContent>
-            <p>
-              Now that your app has been created, you'll want to start building out features and
-              components. Check out some of the resources below for next steps.
-            </p>
-          </IonCardContent>
-        </IonCard>
-
-        <IonList lines="none">
-          <IonListHeader>
-            <IonLabel>Resources</IonLabel>
-          </IonListHeader>
-          <IonItem href="https://ionicframework.com/docs/" target="_blank">
-            <IonIcon slot="start" color="medium" icon={book} />
-            <IonLabel>Ionic Documentation</IonLabel>
-          </IonItem>
-          <IonItem href="https://ionicframework.com/docs/building/scaffolding" target="_blank">
-            <IonIcon slot="start" color="medium" icon={build} />
-            <IonLabel>Scaffold Out Your App</IonLabel>
-          </IonItem>
-          <IonItem href="https://ionicframework.com/docs/layout/structure" target="_blank">
-            <IonIcon slot="start" color="medium" icon={grid} />
-            <IonLabel>Change Your App Layout</IonLabel>
-          </IonItem>
-          <IonItem href="https://ionicframework.com/docs/theming/basics" target="_blank">
-            <IonIcon slot="start" color="medium" icon={colorFill} />
-            <IonLabel>Theme Your App</IonLabel>
-          </IonItem>
-        </IonList>
+        <div id="mapId" style={{width: '100%', height: '100%'}}/>
       </IonContent>
     </IonPage>
   );
