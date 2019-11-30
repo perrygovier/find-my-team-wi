@@ -54,6 +54,12 @@ const Tab1: React.FC = () => {
           case 'South Madison Voters': return {color: "#0000ff"};
           default: return {color: "#"+((1<<24)*Math.random()|0).toString(16)};
         }
+      },
+      onEachFeature: (feature:any, layer:any) => {
+        // does this feature have a property named popupContent?
+        if (feature.properties && feature.properties.name) {
+            layer.bindPopup(feature.properties.name);
+        }
       }
     }).addTo(map);
 
