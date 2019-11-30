@@ -1,1 +1,0 @@
-web: node_modules/.bin/ionic serve --port $PORT --nobrowser --nolivereload --noopen
